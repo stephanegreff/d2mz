@@ -1,0 +1,47 @@
+name: release
+
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: write
+
+jobs:
+  windows-exe:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Version in the script matches the tag
+        shell: bash
+        run: |
+          V=$(python -c "import re; print(re.search(r'__version__ = \"(.+)\"', open('d2mz.py', encoding='utf-8').read()).group(1))")
+          TAG="${GITHUB_REF_NAME#v}"
+          if [ "$V" != "$TAG" ]; then
+            echo "__version__ ($V) != tag ($TAG)"; exit 1
+          fi
+      - name: Build the executables (PyInstaller)
+        run: |
+          pip install pyinstaller
+          pyinstaller --onefile --name d2mz --clean d2mz.py
+          pyinstaller --onefile --windowed --name d2mz_gui --clean d2mz_gui.pyw
+      - name: Smoke test (console exe)
+        shell: cmd
+        run: dist\d2mz.exe --help
+      - name: Attach
+        uses: actions/upload-artifact@v4
+        with:
+          name: windows-exe
+          path: dist/*.exe
+      - name: Create the GitHub release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            dist/d2mz.exe
+            dist/d2mz_gui.exe
+            docs/d2mz_explication.pdf
+          generate_release_notes: true
+          fail_on_unmatched_files: true

@@ -1,0 +1,25 @@
+cff-version: 1.2.0
+message: "If you use d2mz to convert or re-phase your data, please cite it as below."
+type: software
+title: d2mz
+authors:
+  - family-names: GREFF
+    given-names: Stephane
+    affiliation: IMBE, Aix-Marseille Universite, Marseille, France
+identifiers:
+  - type: url
+    value: "https://github.com/stephanegreff/d2mz"
+repository-code: "https://github.com/stephanegreff/d2mz"
+abstract: >-
+  Batch Bruker .d (micrOTOF-Q series, BAF) to mzML/mzXML converter with
+  lock-mass mass recalibration and precursor re-phasing. Pure Python,
+  standard library only.
+keywords:
+  - mass spectrometry
+  - mzML
+  - mzXML
+  - Bruker
+  - qTOF
+  - lock-mass recalibration
+  - precursor correction
+license: MIT

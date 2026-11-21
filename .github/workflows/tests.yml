@@ -1,0 +1,32 @@
+name: tests
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  test:
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+        python: ["3.8", "3.12"]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+      - name: Syntax and imports
+        run: |
+          python -c "import ast; ast.parse(open('d2mz.py', encoding='utf-8').read()); print('syntax ok')"
+          python d2mz.py --help
+          python d2mz.py --version
+      - name: Version declared in the script matches the tag (tags only)
+        if: startsWith(github.ref, 'refs/tags/')
+        shell: bash
+        run: |
+          V=$(python -c "import re; print(re.search(r'__version__ = \"(.+)\"', open('d2mz.py', encoding='utf-8').read()).group(1))")
+          TAG="${GITHUB_REF_NAME#v}"
+          if [ "$V" != "$TAG" ]; then
+            echo "__version__ ($V) != tag ($TAG)"; exit 1
+          fi
