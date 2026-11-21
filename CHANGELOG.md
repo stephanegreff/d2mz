@@ -3,6 +3,11 @@
 Versions are dated `YYYY-MM-DD_xx`. The version embedded in `d2mz.py`
 (`__version__`) always matches the git tag of the release.
 
+## 2026-11-21_cn
+- Licence switched from MIT to GPL-3.0: LICENSE file, README,
+  GitHub page, CITATION.cff, and the citation templates embedded in
+  d2mz (CITATION.cff / .bib / plain-string generated in reports/).
+
 ## 2026-11-21_cm
 - Compiled-exe behaviour: the console executable pauses at the end of
   the run (and on errors) so the report stays readable on Windows.

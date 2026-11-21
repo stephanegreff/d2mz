@@ -65,7 +65,7 @@ Derived from public reverse engineering of the Bruker BAF format
 (H3Jones/bruker-baf, itself derived from the R package 'rtms' by N. Twarog)
 and from the baf2sql knowledge of the kbaf2mzml project (bjonnh).
 
-Licence: MIT (see LICENSE).
+Licence: GPL-3.0 (see LICENSE).
 """
 import argparse
 import base64
@@ -83,7 +83,7 @@ import time
 import zlib
 from xml.sax.saxutils import escape, quoteattr
 
-__version__ = "2026-11-21_cm"
+__version__ = "2026-11-21_cn"
 
 LAST_RUN = {'n_warnings': 0, 'warnings': [],
            'n_errors': 0, 'errors': []}   # set by main()
@@ -3586,7 +3586,7 @@ CITATION_TEXT = (
     "of, Stephane GREFF (IMBE, Aix-Marseille Universite).\n\n"
     "GREFF S. (2026). d2mz {version}: batch Bruker .d to mzML/mzXML "
     "converter with lock-mass recalibration and precursor re-phasing. "
-    "https://github.com/stephanegreff/d2mz (MIT licence).\n\n"
+    "https://github.com/stephanegreff/d2mz (GPL-3.0 licence).\n\n"
     "Funding: BeeMed project, ANSES PNR EST 22-EST-063.")
 
 
@@ -3609,7 +3609,7 @@ def write_citation(folder):
         "  Funding: BeeMed project, ANSES PNR EST 22-EST-063.\n"
         "version: \"%s\"\n"
         "date-released: \"%s\"\n"
-        "license: MIT\n"
+        "license: GPL-3.0\n"
         "repository-code: \"https://github.com/stephanegreff/d2mz\"\n"
         "abstract: >\n"
         "  Batch converter for Bruker qTOF .d folders (BAF format) to\n"
@@ -3637,7 +3637,7 @@ def write_citation(folder):
         "                  Funding: BeeMed project, ANSES PNR EST\n"
         "                  22-EST-063},\n"
         "  url          = {https://github.com/stephanegreff/d2mz},\n"
-        "  license      = {MIT}\n"
+        "  license      = {GPL-3.0}\n"
         "}\n" % (__date__[:4], __version__))
     with open(os.path.join(folder, 'CITATION.cff'), 'w') as f:
         f.write(cff)

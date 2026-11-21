@@ -233,7 +233,7 @@ and pull request.
 d2mz/
 ├── .github/workflows/tests.yml
 ├── .gitignore            (__pycache__/, *.pyc, converted/, report.json)
-├── LICENSE               (MIT)
+├── LICENSE               (GPL-3.0)
 ├── README.md
 ├── d2mz.py
 └── test_synthetic.py
@@ -261,4 +261,4 @@ written by Vibe from the source code of each version.
 
 **Funding**: This work was developed within the BeeMed project, funded by the French National Research Programme for Environmental and Occupational Health (PNR EST) of ANSES (project 22-EST-063).
 
-MIT licence — see `LICENSE`.
+GPL-3.0 licence — see `LICENSE`. Everyone may use, modify and redistribute the code freely; any redistributed product must in turn be published under GPL-3.0 with its sources, so no closed-source embedding in commercial products.

@@ -66,4 +66,4 @@ The BAF decoding is derived from the public reverse engineering of the Bruker BA
 
 **Funding**: This work was developed within the BeeMed project, funded by the French National Research Programme for Environmental and Occupational Health (PNR EST) of ANSES (project 22-EST-063).
 
-**Licence**: MIT — free to use, modify and redistribute; please credit the above.
+**Licence**: GPL-3.0 — free to use, modify and redistribute; any redistributed product must in turn be published under GPL-3.0 with its sources (no closed-source embedding in commercial products); please credit the above.
