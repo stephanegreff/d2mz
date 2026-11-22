@@ -19,7 +19,8 @@ In DDA, the precursor m/z written by the instrument is the **quadrupole
 isolation setpoint** (the centre of the isolation window, whatever width you set in the method), not a measurement. On Bruker qTOFs the
 exported value is the un-recalibrated window centre — the accurate value is not
 even stored in the vendor metadata (ProteoWizard issue #483; Defossez et al.
-2023, *Mass Spectrometry Reviews*). d2mz therefore recalibrates every scan on
+2023, *Mass Spectrometry Reviews*; Breaud et al. 2023, *Antioxidants*,
+DOI 10.3390/antiox12010050). d2mz therefore recalibrates every scan on
 lock masses and re-phases each precursor onto the recalibrated MS1 apex.
 
 ## Features
