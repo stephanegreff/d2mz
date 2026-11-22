@@ -1,0 +1,13 @@
+d2mz - Batch Bruker .d to mzML/mzXML converter with lock-mass
+recalibration and precursor re-phasing.
+
+Author:
+Stephane GREFF
+IMBE - Institut Mediterraneen de Biodiversite et d'Ecologie marine et continentale
+Aix-Marseille Universite, Marseille, France
+
+Development assisted by the Vibe AI assistant (Mistral AI),
+under the author's control.
+
+Funding: BEEMED project (ANSES PNR EST, grant BeeMed 22-EST-063).
+License: GPL-3.0 (see LICENSE).
