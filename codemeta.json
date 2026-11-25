@@ -2,7 +2,7 @@
   "@context": "https://doi.org/10.5063/schema/codemeta-2.0",
   "@type": "SoftwareSourceCode",
   "name": "d2mz",
-  "version": "2026-11-21_cn",
+  "version": "2026-11-25_co",
   "description": "Batch Bruker .d (micrOTOF-Q series, BAF format) to mzML/mzXML converter with lock-mass mass recalibration and precursor re-phasing. Pure Python, standard library only. Reads the raw Bruker .d folders natively, applies automatic mass recalibration and re-phases the precursor masses of MS/MS acquisitions, and writes standard mzML/mzXML files with automated quality control of the converted files.",
   "author": [
     {
@@ -20,5 +20,5 @@
     "@type": "Organization",
     "name": "ANSES - PNR EST (BeeMed 22-EST-063)"
   },
-  "dateModified": "2026-11-21"
+  "dateModified": "2026-11-25"
 }
