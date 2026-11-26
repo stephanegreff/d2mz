@@ -4,7 +4,7 @@ Versions are dated `YYYY-MM-DD_xx`. The version embedded in `d2mz.py`
 (`__version__`) always matches the git tag of the release.
 
 ## 2026-11-25_cp
-Durable calibration trace in the report (port of the 2026-11-16_ci
+- Durable calibration trace in the report (port of the 2026-11-16_ci
 surface onto this lineage): every converted file now carries
 calibration_applied, calibration_mode, calibration_n_targets,
 calibration_ppm_median, calibration_ppm_max (fit statistics of
@@ -13,11 +13,11 @@ calibration block (ok, n_own_fit, n_borrowed, n_uncalibrated,
 worst median/max residual ppm, files_above_5ppm, plain-language
 summary) plus the quality_gate block stamped BEFORE the
 per-series report dump (report_<series>.json used to carry neither).
-New quality warning: "NO mass calibration applied" for a file whose
+- New quality warning: "NO mass calibration applied" for a file whose
 trace says applied=False; the end-of-run warning list is factored
 into _file_warnings, shared between the per-series dumps and the
 final gate.
-This block is the GO/NO-GO gate read before any deposit (GNPS,
+- This block is the GO/NO-GO gate read before any deposit (GNPS,
 Zenodo, HAL): ok=true, n_uncalibrated=0, files_above_5ppm empty.
 
 ## 2026-11-25_co
