@@ -83,7 +83,7 @@ import time
 import zlib
 from xml.sax.saxutils import escape, quoteattr
 
-__version__ = "2026-11-25_co"
+__version__ = "2026-11-25_cp"
 
 LAST_RUN = {'n_warnings': 0, 'warnings': [],
            'n_errors': 0, 'errors': []}   # set by main()
@@ -4233,6 +4233,22 @@ def convert_one(d_folder, opts, log=print, borrow_model=None,
         calib.method_polarity = method_pol
         calib.n_lock_pos = len(calibs['positive'].points)
         calib.n_lock_neg = len(calibs['negative'].points)
+    # 2026-11-25_cp: durable per-file calibration trace -- the fit
+    # stats (n_targets, residual ppm) used to reach the console log
+    # only; the report needs them (port of the 2026-11-16_ci surface
+    # onto the GitHub _co lineage; deferred-and-borrowed files carry
+    # the donor's fit plus calibration_borrowed_from)
+    _cfit = cal.get('fit') or {}
+    _cborrowed = getattr(calib, 'calibration_borrowed_from', None) \
+        or getattr(calib, 'borrowed_from', None)
+    calib.calibration_trace = dict(
+        mode=cal.get('mode'),
+        applied=bool(_cfit or cal.get('quad') is not None
+                     or cal.get('mode') in (4, 5) or _cborrowed),
+        n_targets=_cfit.get('n_targets'),
+        ppm_median=_cfit.get('med_ppm'),
+        ppm_max=_cfit.get('max_ppm'))
+
     if getattr(calib, 'segment_only', False):
         # single quadratic from the calibrant segment: no lock-mass
         # observation, nothing to report as lock RMS
@@ -4414,6 +4430,80 @@ def banner():
      version %s (%s) - ANSES PNR EST 22-EST-063 (BeeMed)
   ================================================================
 """ % (__version__, __date__)
+
+
+def _file_warnings(report):
+    """Per-file quality flags mined from the report. 2026-11-25_cp:
+    factored out of main() so every per-series report dump carries
+    the same warnings as the end-of-run quality gate (new flag:
+    a file whose calibration trace says applied=False)."""
+    warns = []
+    for _f in report['files']:
+        _nm = _f.get('name') or '?'
+        if _f.get('error'):
+            continue                    # already in problems
+        if _f.get('ms2_warning'):
+            warns.append((_nm, _f['ms2_warning']))
+        if _f.get('mode_warning'):
+            warns.append((_nm, 'acquisition outside the validated '
+                              'scope (%s): %s -- conversion NOT '
+                              'validated for this mode'
+                          % (_f.get('acquisition_mode') or '?',
+                             _f['mode_warning'])))
+        if _f.get('calibration_borrowed_from'):
+            warns.append((_nm, 'lock calibration BORROWED from %s '
+                              '(no own calibrant observation)'
+                          % _f['calibration_borrowed_from']))
+        if _f.get('calibration_applied') is False:
+            warns.append((_nm, 'NO mass calibration applied '
+                              '(no own calibrant fit and no borrowed '
+                              'model): m/z NOT recalibrated'))
+        _dp, _mp = _f.get('detected_polarity'), \
+            _f.get('method_polarity')
+        if _dp and _mp and _dp != _mp:
+            warns.append((_nm, 'polarity mismatch: detected %s, '
+                              'method %s' % (_dp, _mp)))
+    return warns
+
+
+def _calibration_summary(files):
+    """Batch-level calibration block (2026-11-25_cp, port of the
+    2026-11-16_ci surface): every file's calibration trace with the
+    fit statistics (n_targets, residual ppm) -- the GO/NO-GO gate
+    before any deposit reads ok / n_uncalibrated / files_above_5ppm."""
+    rows = [_f for _f in files if _f.get('error') is None
+            and _f.get('calibration_applied') is not None]
+    medians = [_f['calibration_ppm_median'] for _f in rows
+               if _f.get('calibration_ppm_median') is not None]
+    n_own = sum(1 for _f in rows if _f['calibration_applied']
+                and not _f.get('calibration_borrowed_from'))
+    n_borrowed = sum(1 for _f in rows
+                     if _f.get('calibration_borrowed_from'))
+    n_uncal = sum(1 for _f in rows if not _f['calibration_applied'])
+    maxes = [_f['calibration_ppm_max'] for _f in rows
+             if _f.get('calibration_ppm_max') is not None]
+    above5 = [_f['name'] for _f in rows
+              if (_f.get('calibration_ppm_median') or 0) > 5.0]
+    max_med = max(medians) if medians else None
+    max_max = max(maxes) if maxes else None
+    ok = (n_uncal == 0) and (max_med is None or max_med <= 5.0)
+    if n_own and max_med is not None:
+        summary = ('%d file(s) with own calibration fit '
+                  '(worst median residual %.2f ppm, worst max %.2f ppm)'
+                  % (n_own, max_med, max_max))
+    elif n_own:
+        summary = ('%d file(s) calibrated (instrument calibration, '
+                   'no per-file fit statistics)' % n_own)
+    else:
+        summary = 'NO calibration trace found'
+    if n_borrowed:
+        summary += '; %d borrowed' % n_borrowed
+    if n_uncal:
+        summary += '; %d NOT calibrated' % n_uncal
+    return dict(ok=ok, n_files_with_trace=len(rows), n_own_fit=n_own,
+                n_borrowed=n_borrowed, n_uncalibrated=n_uncal,
+                ppm_median_max=max_med, ppm_max_max=max_max,
+                files_above_5ppm=above5, summary=summary)
 
 
 def main(argv=None):
@@ -4900,6 +4990,7 @@ def main(argv=None):
                 _ms2_warning = ('no precursor metadata matched -- '
                                 'the baf fallback decoded every scan '
                                 'as MS1; run d2mz --probe on this .d')
+            _ctr = getattr(calib, 'calibration_trace', None) or {}
             report['files'].append(dict(
                 name=name, input=display or input_path, n_scans=len(specs), n_ms2=n_ms2,
                 ms2_source=_ms2_source, ms2_warning=_ms2_warning,
@@ -4916,6 +5007,11 @@ def main(argv=None):
                 lock_rms_ppm_after=calib.rms_after(),
                 lock_mean_ppm_after=calib.mean_ppm_after(),
                 lock_stdev_ppm_after=calib.stdev_ppm_after(),
+                calibration_applied=_ctr.get('applied'),
+                calibration_mode=_ctr.get('mode'),
+                calibration_n_targets=_ctr.get('n_targets'),
+                calibration_ppm_median=_ctr.get('ppm_median'),
+                calibration_ppm_max=_ctr.get('ppm_max'),
                 calibration_borrowed_from=getattr(
                     calib, 'calibration_borrowed_from', None)
                 or getattr(calib, 'borrowed_from', None),
@@ -4969,6 +5065,17 @@ def main(argv=None):
                     rt_spread_s=round(spread, 2),
                     rt_stdev_s=round(stdev, 2)))
             report['retention_standards'][pol_a] = anchors
+        # 2026-11-25_cp: stamp the batch blocks BEFORE the per-series
+        # dump -- report_<series>.json used to be written before
+        # quality_gate/calibration were computed, so it carried neither
+        report['calibration'] = _calibration_summary(report['files'])
+        _gwarns = _file_warnings(report)
+        report['quality_gate'] = dict(
+            n_converted=n_converted, n_errors=len(problems),
+            n_warnings=len(_gwarns),
+            errors=[{'file': _nm, 'reason': _rs} for _nm, _rs in problems],
+            warnings=[{'file': _nm, 'reason': _rs}
+                      for _nm, _rs in _gwarns])
         report['duration_s'] = round(time.time() - t_run0, 1)
         # the per-series report sits in the annexes/ subfolder
         # of the output folder, next to the CITATION files and TSV/
@@ -5024,27 +5131,10 @@ def main(argv=None):
     # borrowed calibration, polarity mismatch, and the MS2-loss
     # warning. Errors fail the run (exit code 1); warnings recap but
     # keep exit 0.
-    warns = []
-    for _f in report['files']:
-        _nm = _f.get('name') or '?'
-        if _f.get('error'):
-            continue                    # already in problems
-        if _f.get('ms2_warning'):
-            warns.append((_nm, _f['ms2_warning']))
-        if _f.get('mode_warning'):
-            warns.append((_nm, 'acquisition outside the validated '
-                              'scope (%s): %s -- conversion NOT '
-                              'validated for this mode'
-                          % (_f.get('acquisition_mode') or '?',
-                             _f['mode_warning'])))
-        if _f.get('calibration_borrowed_from'):
-            warns.append((_nm, 'lock calibration BORROWED from %s '
-                              '(no own calibrant observation)'
-                          % _f['calibration_borrowed_from']))
-        _dp, _mp = _f.get('detected_polarity'), _f.get('method_polarity')
-        if _dp and _mp and _dp != _mp:
-            warns.append((_nm, 'polarity mismatch: detected %s, '
-                              'method %s' % (_dp, _mp)))
+    # 2026-11-25_cp: warn list factored (_file_warnings), shared
+    # between the per-series report dumps and this final gate
+    warns = _file_warnings(report)
+    report['calibration'] = _calibration_summary(report['files'])
     report['quality_gate'] = dict(
         n_converted=n_converted, n_errors=len(problems),
         n_warnings=len(warns),
